@@ -18,16 +18,23 @@ class System:
 ButcherTable = namedtuple('ButcherTable', ['c', 'a', 'b'])
 
 
-def init_step(system: System, init_values, start, end,  order=2, error=10**-6):
+def init_step(system: System, init_values, start, end,  order, error):
     delta = (1 / max(abs(start), abs(end)))**(order+1) + norm(system.apply(start, *init_values))
     return (error / delta)**(1 / (order+1))
 
 
-def solver(system: System, init_values, table, start=0, end=math.pi):
-    x = start
-    ys = np.array(init_values)
-    step = init_step(system, init_values, start, end)
+def solve(system: System, init_values, table: ButcherTable, start=0, end=math.pi, order=2, error=10**-6):
+    step = init_step(system, init_values, start, end, order, error)
 
+    ys_step = solver(start, np.array(init_values), step, system, table, end)
+    ys_doublestep = solver(start, np.array(init_values), step*2, system, table, end)
+
+    error = norm(ys_step - ys_doublestep) / (2**order - 1)
+
+    return ys_step, error
+
+
+def solver(x, ys, step, system: System, table: ButcherTable, end):
     while True:
         if step + x >= end:
             step = end - x
@@ -37,11 +44,14 @@ def solver(system: System, init_values, table, start=0, end=math.pi):
         ys += np.array(correction(x, ys, system, step, table))
         if x >= end:
             break
-
     return ys
 
 
+# def take_step(x, ys, table: ButcherTable, end):
+
+
 def correction(x, ys, system: System, step, table: ButcherTable):
+    """Compute correction as h*f(x+c*h, y+sum(c_i*k_i))"""
     kss = []
     for c, a, b in zip(*table):
         ks = [[a*k for k in ks] for a, ks in zip(a, kss)]
@@ -53,6 +63,7 @@ def correction(x, ys, system: System, step, table: ButcherTable):
 
 
 def helper_table(c2):
+    """Compute values for Butcher Table from c2"""
     c = [0, c2]
     a = [[0, 0], [c2, 0]]
     b = [1 / (2*c2), 1 - 1 / (2*c2)]
@@ -66,12 +77,12 @@ if __name__ == '__main__':
 
     dy1_by_dx = make_linear_func(A=A)
     dy2_by_dx = make_linear_func(B=-B)
-    system = System([dy1_by_dx, dy2_by_dx])
+    sys = System([dy1_by_dx, dy2_by_dx])
 
-    init_values = [B*math.pi, A*math.pi]
+    init = [B * math.pi, A * math.pi]
 
     table = helper_table(1 / 12)
 
     print('#'*25)
     print('Result:')
-    print(solver(system, init_values, table))
+    print(solve(sys, init, table))
