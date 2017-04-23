@@ -16,3 +16,7 @@ RungeKuttaConstStep results:
 RungeKuttaVarSteps results:
 
 ![](https://latex.codecogs.com/gif.latex?%5C%5C%20y1%20%3D%200.26279003%20%5C%5C%20y2%20%3D%200.21747611%20%5C%5C%20totalerror%20%3D%200.00000188000846747511)
+
+By hand results:
+
+![](https://latex.codecogs.com/gif.latex?%5C%5C%20y1%20%3D%200.26423596%20%5C%5C%20y2%20%3D%200.20916393%20%5C%5C)
