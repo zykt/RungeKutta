@@ -1,8 +1,6 @@
 import math
 import numpy as np
-from collections import namedtuple
 from numpy.linalg import norm
-from itertools import zip_longest
 from RungeKutta import System, ButcherTable, init_step, correction
 
 
@@ -31,7 +29,7 @@ def solver(x, ys, step, system: System, table: ButcherTable, end, order, error):
         else:
             x += step
 
-        next_ys = ys + np.array(correction(x, ys, system, step, table))
+        next_ys = ys + correction(x, ys, system, step, table)
         ys_doublestep = take_doublestep(x, ys, step/2)
         local_error = norm(ys_doublestep - next_ys) / (1 - 2**(-order))
 

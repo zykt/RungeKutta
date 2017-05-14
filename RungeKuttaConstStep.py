@@ -1,8 +1,6 @@
 import math
-
 import numpy as np
 from numpy.linalg import norm
-
 from RungeKutta import System, ButcherTable, init_step, correction
 
 
@@ -32,7 +30,7 @@ def solver(x, ys, step, system: System, table: ButcherTable, end):
             x = end
         else:
             x += step
-        ys += np.array(correction(x, ys, system, step, table))
+        ys += correction(x, ys, system, step, table)
         if x >= end:
             break
     return ys
