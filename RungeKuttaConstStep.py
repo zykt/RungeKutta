@@ -23,15 +23,23 @@ def init_step(system: System, init_values, start, end,  order, error):
     return (error / delta)**(1 / (order+1))
 
 
-def solve(system: System, init_values, table: ButcherTable, start=0, end=math.pi, order=2, error=10**-6):
-    step = init_step(system, init_values, start, end, order, error)
+def solve(system: System, init_values, table: ButcherTable, start=0, end=math.pi, order=2, tolerance=10 ** -6):
+    step = init_step(system, init_values, start, end, order, tolerance)
 
-    ys_step = solver(start, np.array(init_values), step, system, table, end)
     ys_doublestep = solver(start, np.array(init_values), step*2, system, table, end)
 
-    error = norm(ys_step - ys_doublestep) / (2**order - 1)
+    while True:
+        ys_step = solver(start, np.array(init_values), step, system, table, end)
 
-    return ys_step, error
+        global_error = norm(ys_step - ys_doublestep) / (2**order - 1)
+
+        if global_error < tolerance:
+            break
+        else:
+            ys_doublestep = ys_step
+            step /= 2
+
+    return ys_step, global_error
 
 
 def solver(x, ys, step, system: System, table: ButcherTable, end):
@@ -45,9 +53,6 @@ def solver(x, ys, step, system: System, table: ButcherTable, end):
         if x >= end:
             break
     return ys
-
-
-# def take_step(x, ys, table: ButcherTable, end):
 
 
 def correction(x, ys, system: System, step, table: ButcherTable):
