@@ -51,16 +51,15 @@ def solver(x, ys, step, system: System, table: ButcherTable, end, order, error):
     return ys
 
 
-def helper_table(c2):
-    """Compute values for Butcher Table from c2"""
-    c = [0, c2]
-    a = [[0, 0], [c2, 0]]
-    b = [1 / (2*c2), 1 - 1 / (2*c2)]
-    return ButcherTable(c, a, b)
-
-
 if __name__ == '__main__':
     def make_linear_func(A=0, B=0): return lambda x, y1, y2: B*y1 + A*y2
+
+    def helper_table(c2):
+        """Compute values for Butcher Table from c2"""
+        c = [0, c2]
+        a = [[0, 0], [c2, 0]]
+        b = [1 / (2 * c2), 1 - 1 / (2 * c2)]
+        return ButcherTable(c, a, b)
 
     A, B = 1/12, 1/15
 
