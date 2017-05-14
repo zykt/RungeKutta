@@ -4,55 +4,49 @@ from numpy.linalg import norm
 from RungeKutta import System, ButcherTable, init_step, correction
 
 
+log = {
+    "task2": {"x": [], "true_error": [], "h": 0},
+    "task3.1": {"x": [], "h": []},
+    "task3.2": {"x": [], "estimate_error": [], "true_error": []},
+    "task3.3": {"tolerance": [], "rhs_evaluations": 0}
+}
+
+
 #####################
 # const step solver #
 #####################
 
 
-def const_step_solve(system: System, init_values, table: ButcherTable, start=0, end=math.pi, order=2, error=10**-4):
-    step = init_step(system, init_values, start, end, order, error)
+def const_step_solve(system: System, init_values, table: ButcherTable, start=0, end=math.pi, order=2, tolerance=10 ** -6):
+    step = init_step(system, init_values, start, end, order, tolerance)
 
-    ys_step = _const_step_solver(start, np.array(init_values), step, system, table, end, order, error)
-    ys_doublestep = _const_step_solver(start, np.array(init_values), step * 2, system, table, end, order, error)
+    ys_doublestep = _const_step_solver(start, np.array(init_values), step * 2, system, table, end)
 
-    error = norm(ys_step - ys_doublestep) / (2**order - 1)
+    while True:
+        ys_step = _const_step_solver(start, np.array(init_values), step, system, table, end)
 
-    return ys_step, error
+        global_error = norm(ys_step - ys_doublestep) / (2**order - 1)
+
+        if global_error < tolerance:
+            break
+        else:
+            ys_doublestep = ys_step
+            step /= 2
+
+    return ys_step, global_error
 
 
-def _const_step_solver(x, ys, step, system: System, table: ButcherTable, end, order, error):
-    def take_doublestep(_x, _ys, _step):
-        _ys += np.array(correction(_x, _ys, system, _step, table))
-        _x += _step
-        _ys += np.array(correction(_x, _ys, system, _step, table))
-        return _ys
-
+def _const_step_solver(x, ys, step, system: System, table: ButcherTable, end):
     while True:
         if step + x >= end:
             step = end - x
             x = end
         else:
             x += step
-
-        next_ys = ys + correction(x, ys, system, step, table)
-        ys_doublestep = take_doublestep(x, ys, step/2)
-        local_error = norm(ys_doublestep - next_ys) / (1 - 2**(-order))
-
-        if local_error > error * 2**order:
-            step /= 2
-        elif local_error > error:
-            step /= 2
-            ys = ys_doublestep
-        elif local_error > error / 2**(order+1):
-            ys = next_ys
-        else:
-            step *= 2
-            ys = next_ys
-
+        ys += correction(x, ys, system, step, table)
         if x >= end:
             break
     return ys
-
 
 ###################
 # var step solver #
