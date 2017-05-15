@@ -2,13 +2,16 @@ import math
 import numpy as np
 from numpy.linalg import norm
 from RungeKutta import System, ButcherTable, init_step, correction
+import matplotlib.pyplot as plt
 
 
 log = {
-    "task2": {"x": [], "true_error": [], "h": 0},
-    "task3.1": {"x": [], "h": []},
-    "task3.2": {"x": [], "estimate_error": [], "true_error": []},
-    "task3.3": {"tolerance": [], "rhs_evaluations": 0}
+    "task2": {"x": [], "true_error": [], "step": 0},
+    # "task3.1": {"x": [], "h": []},
+    # "task3.2": {"x": [], "estimate_error": [], "true_error": []},
+    # "task3.3": {"tolerance": [], "rhs_evaluations": 0},
+    "task3": {"x": [], "step": [], "estimate_error": [], "true_error": [], "tolerance": [], "rhs_evaluations": 0},
+    "debug": True
 }
 
 
@@ -56,8 +59,11 @@ def _const_step_solver(x, ys, step, system: System, table: ButcherTable, end):
 def var_step_solve(system: System, init_values, table: ButcherTable, start=0, end=math.pi, order=2, error=10**-4):
     step = init_step(system, init_values, start, end, order, error)
 
+    log["debug"] = True
     ys_step = _var_step_solver(start, np.array(init_values), step, system, table, end, order, error)
+    log["debug"] = False
     ys_doublestep = _var_step_solver(start, np.array(init_values), step * 2, system, table, end, order, error)
+    log["debug"] = True
 
     error = norm(ys_step - ys_doublestep) / (2**order - 1)
 
@@ -81,6 +87,11 @@ def _var_step_solver(x, ys, step, system: System, table: ButcherTable, end, orde
         next_ys = ys + correction(x, ys, system, step, table)
         ys_doublestep = take_doublestep(x, ys, step/2)
         local_error = norm(ys_doublestep - next_ys) / (1 - 2**(-order))
+
+        # log stuff
+        if log["debug"]:
+            log["task3"]["x"].append(x)
+            log["task3"]["step"].append(step)
 
         if local_error > error * 2**order:
             step /= 2
@@ -135,9 +146,21 @@ if __name__ == '__main__':
     print(const_step_solve(sys, init, table))
     print('#'*50)
 
-    print(' '*50)
+    print()
 
     print('#'*50)
     print('Var step result:')
     print(var_step_solve(sys, init, table))
     print('#'*50)
+
+    print()
+
+    print('plotting')
+    fig = plt.figure()
+    ax1 = fig.add_subplot(111)
+    ax1.plot(log["task3"]["x"], log["task3"]["step"])
+    # ax1.set(title="")
+
+    eps = [10**-1, 10**-2, 10**-3, 10**-4, 10**-5]
+    log["task3"][""]
+    plt.show()
